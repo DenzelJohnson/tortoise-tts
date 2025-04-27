@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tortoise TTS Demo</title>
+    <style>
+        #loading { display: none; color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Tortoise TTS</h1>
+    <textarea id="text" rows="4">Hello, world!</textarea><br>
+    <button id="say">Speak</button>
+    <span id="loading">Generating...</span>
+    <audio id="player" controls autoplay></audio>
+
+    <script>
+        document.getElementById("say").onclick = async () => {
+            const button = document.getElementById("say");
+            const loading = document.getElementById("loading");
+            const player = document.getElementById("player");
+            
+            button.disabled = true;
+            loading.style.display = "inline";
+            player.src = ""; // Clear previous audio
+
+            try {
+                const text = document.getElementById("text").value;
+                const resp = await fetch("/synthesize", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({text, preset: "ultra_fast"}) // Add preset for faster generation
+                });
+
+                if (!resp.ok) throw new Error(await resp.text());
+                
+                const blob = await resp.blob();
+                player.src = URL.createObjectURL(blob);
+                player.play().catch(e => console.log("Autoplay prevented:", e));
+            } catch (e) {
+                alert("Error: " + e.message);
+            } finally {
+                button.disabled = false;
+                loading.style.display = "none";
+            }
+        };
+    </script>
+</body>
+</html>
